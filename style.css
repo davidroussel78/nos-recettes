@@ -97,7 +97,7 @@ body.login-page {
 }
 
 .login-brand p {
-  color: var(--sidebar-muted);
+  color: rgba(240, 230, 217, 0.75);
   font-size: 0.875rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -289,7 +289,7 @@ body.app-page {
 
 .brand p {
   font-size: 0.75rem;
-  color: var(--sidebar-muted);
+  color: rgba(240, 230, 217, 0.65);
   margin-top: 0.25rem;
   letter-spacing: 0.04em;
 }
@@ -483,31 +483,24 @@ section.view {
   box-shadow: var(--shadow-hover);
 }
 
-.card-photo {
-  height: 175px;
-  overflow: hidden;
-  background: #f0e8de;
-  position: relative;
-}
-
-.card-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.35s ease;
-}
-.recipe-card:hover .card-photo img { transform: scale(1.04); }
-
-.card-photo-placeholder {
-  width: 100%;
-  height: 100%;
+/* Bloc icône en haut de la carte */
+.card-icon-block {
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  background: linear-gradient(135deg, #f0e8de 0%, #e8d8c8 100%);
-  color: rgba(28,16,8,0.2);
+  font-size: 3.5rem;
+  transition: transform 0.3s ease;
 }
+.recipe-card:hover .card-icon-block { transform: scale(1.1); }
+
+/* Couleurs de fond par catégorie */
+.card-icon-block.cat-aperitif { background: linear-gradient(135deg, #3d1f5c 0%, #5a2d82 100%); }
+.card-icon-block.cat-entree   { background: linear-gradient(135deg, #1a4a2a 0%, #256b3a 100%); }
+.card-icon-block.cat-plat     { background: linear-gradient(135deg, #6b1a1a 0%, #9b2335 100%); }
+.card-icon-block.cat-dessert  { background: linear-gradient(135deg, #7a3a1a 0%, #c9941a 100%); }
+.card-icon-block.cat-boisson  { background: linear-gradient(135deg, #1a3a5c 0%, #1e6496 100%); }
+.card-icon-block.cat-default  { background: linear-gradient(135deg, #3a3028 0%, #5a4a3a 100%); }
 
 .card-body { padding: 1rem 1.1rem 1.1rem; }
 
@@ -580,30 +573,9 @@ section.view {
 #view-detail.view { padding: 2rem 2.25rem; }
 
 .detail-hero {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 2.5rem;
-  margin-bottom: 2.5rem;
-  align-items: start;
-}
-
-.detail-photo {
-  width: 100%;
-  height: 280px;
-  object-fit: cover;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-hover);
-}
-
-.detail-photo-placeholder {
-  width: 100%;
-  height: 280px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 5rem;
-  background: linear-gradient(135deg, #f0e8de 0%, #e8d8c8 100%);
-  border-radius: var(--radius);
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border);
 }
 
 .detail-cat {
@@ -856,29 +828,6 @@ section.view {
 }
 .step-row textarea:focus { border-color: var(--accent); }
 
-/* Photo section */
-.form-photo-preview {
-  width: 100%;
-  max-width: 300px;
-  height: 180px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  margin-bottom: 0.75rem;
-  border: 2px solid var(--border);
-}
-
-.photo-note {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 0.4rem;
-}
-
-input[type="file"] {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
 /* Form actions */
 .form-actions {
   display: flex;
@@ -1034,8 +983,6 @@ input[type="file"] {
    ============================================================ */
 @media (max-width: 900px) {
   :root { --sidebar-width: 220px; }
-  .detail-hero { grid-template-columns: 1fr; }
-  .detail-photo, .detail-photo-placeholder { height: 220px; }
   .detail-body { grid-template-columns: 1fr; }
 }
 

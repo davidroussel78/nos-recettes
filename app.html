@@ -139,14 +139,6 @@
           <button class="btn-add-row" onclick="addStepRow()">+ Ajouter une étape</button>
         </div>
 
-        <!-- Photo -->
-        <div class="form-section">
-          <h3>📷 Photo (optionnel)</h3>
-          <div id="photo-preview-form"></div>
-          <input type="file" id="f-photo" accept="image/*">
-          <p class="photo-note">Formats acceptés : JPG, PNG, WebP — max 5 Mo recommandé</p>
-        </div>
-
         <!-- Boutons -->
         <div class="form-actions">
           <button class="btn-secondary" onclick="cancelForm()">Annuler</button>
@@ -237,16 +229,13 @@
     import { getFirestore, collection, getDocs, addDoc, updateDoc,
              deleteDoc, doc, serverTimestamp, query, orderBy }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
-      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
     import { FIREBASE_CONFIG }
       from "./firebase-config.js";
 
     // ── Init Firebase ─────────────────────────────────────────────
-    const app     = initializeApp(FIREBASE_CONFIG);
-    const auth    = getAuth(app);
-    const db      = getFirestore(app);
-    const storage = getStorage(app);
+    const app  = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
 
     // ── État global ───────────────────────────────────────────────
     const state = {
@@ -328,7 +317,8 @@
     // ════════════════════════════════════════════════════════════════
 
     function getFilteredRecipes() {
-      let list = state.recipes;
+      const CAT_ORDER = { aperitif: 1, entree: 2, plat: 3, dessert: 4, boisson: 5 };
+      let list = [...state.recipes];
       if (state.currentCategory !== 'tous') {
         list = list.filter(r => r.categorie === state.currentCategory);
       }
@@ -340,6 +330,13 @@
           r.ingredients?.some(i => i.nom?.toLowerCase().includes(q))
         );
       }
+      // Tri : catégorie (ordre logique) puis alphabétique sur le titre
+      list.sort((a, b) => {
+        const catA = CAT_ORDER[a.categorie] || 99;
+        const catB = CAT_ORDER[b.categorie] || 99;
+        if (catA !== catB) return catA - catB;
+        return (a.titre || '').localeCompare(b.titre || '', 'fr', { sensitivity: 'base' });
+      });
       return list;
     }
 
@@ -378,24 +375,22 @@
       empty.classList.add('hidden');
 
       grid.innerHTML = filtered.map(r => {
-        const icon = CAT_ICONS[r.categorie] || '🍽️';
+        const icon     = CAT_ICONS[r.categorie] || '🍽️';
         const catLabel = CAT_LABELS[r.categorie] || r.categorie;
-        const photo = r.photoUrl
-          ? `<img src="${r.photoUrl}" alt="${escHtml(r.titre)}" loading="lazy">`
-          : `<div class="card-photo-placeholder">${icon}</div>`;
+        const catClass = r.categorie ? `cat-${r.categorie}` : 'cat-default';
 
         const metas = [
-          r.nbPersonnes     ? `<span>👥 ${r.nbPersonnes} pers.</span>`        : '',
-          r.tempsPrepMin    ? `<span>⏱️ ${r.tempsPrepMin} min</span>`         : '',
+          r.nbPersonnes     ? `<span>👥 ${r.nbPersonnes} pers.</span>`         : '',
+          r.tempsPrepMin    ? `<span>⏱️ ${r.tempsPrepMin} min</span>`          : '',
           r.tempsCuissonMin ? `<span>🔥 ${r.tempsCuissonMin} min cuis.</span>` : '',
-          r.auteur          ? `<span>👨‍🍳 ${escHtml(r.auteur)}</span>`          : '',
+          r.auteur          ? `<span>👨‍🍳 ${escHtml(r.auteur)}</span>`           : '',
         ].filter(Boolean).join('');
 
         return `
           <div class="recipe-card" onclick="openDetail('${r.id}')">
-            <div class="card-photo">${photo}</div>
+            <div class="card-icon-block ${catClass}">${icon}</div>
             <div class="card-body">
-              <div class="card-cat">${icon} ${catLabel}</div>
+              <div class="card-cat">${catLabel}</div>
               <h3 class="card-title">${escHtml(r.titre)}</h3>
               <div class="card-meta">${metas}</div>
             </div>
@@ -415,11 +410,6 @@
 
       const CAT_ICONS  = { aperitif:'🥂', entree:'🥗', plat:'🍖', dessert:'🍰', boisson:'🍹' };
       const CAT_LABELS = { aperitif:'Apéritif', entree:'Entrée', plat:'Plat', dessert:'Dessert', boisson:'Boisson' };
-
-      // Photo
-      const photoBlock = r.photoUrl
-        ? `<img src="${r.photoUrl}" alt="${escHtml(r.titre)}" class="detail-photo">`
-        : `<div class="detail-photo-placeholder">${CAT_ICONS[r.categorie] || '🍽️'}</div>`;
 
       // Méta-pills
       const metas = [
@@ -447,15 +437,12 @@
 
       document.getElementById('detail-content').innerHTML = `
         <div class="detail-hero">
-          ${photoBlock}
-          <div class="detail-hero-info">
-            <div class="detail-cat">${CAT_ICONS[r.categorie] || ''} ${CAT_LABELS[r.categorie] || r.categorie}</div>
-            <h1 class="detail-title">${escHtml(r.titre)}</h1>
-            <div class="detail-meta">${metas}</div>
-            <div class="detail-actions-row">
-              <button class="btn-secondary" onclick="openForm('${r.id}')">✏️ Modifier</button>
-              <button class="btn-danger"    onclick="confirmDelete('${r.id}')">🗑️ Supprimer</button>
-            </div>
+          <div class="detail-cat">${CAT_ICONS[r.categorie] || ''} ${CAT_LABELS[r.categorie] || r.categorie}</div>
+          <h1 class="detail-title">${escHtml(r.titre)}</h1>
+          <div class="detail-meta">${metas}</div>
+          <div class="detail-actions-row">
+            <button class="btn-secondary" onclick="openForm('${r.id}')">✏️ Modifier</button>
+            <button class="btn-danger"    onclick="confirmDelete('${r.id}')">🗑️ Supprimer</button>
           </div>
         </div>
         <div class="detail-body">
@@ -486,8 +473,6 @@
       document.getElementById('f-personnes').value   = '4';
       document.getElementById('f-prep').value        = '0';
       document.getElementById('f-cuisson').value     = '0';
-      document.getElementById('f-photo').value       = '';
-      document.getElementById('photo-preview-form').innerHTML = '';
       document.getElementById('ingredients-list').innerHTML   = '';
       document.getElementById('steps-list').innerHTML         = '';
       state.ingCounter  = 0;
@@ -518,12 +503,6 @@
       document.getElementById('f-personnes').value = r.nbPersonnes     || 4;
       document.getElementById('f-prep').value      = r.tempsPrepMin    || 0;
       document.getElementById('f-cuisson').value   = r.tempsCuissonMin || 0;
-
-      if (r.photoUrl) {
-        document.getElementById('photo-preview-form').innerHTML =
-          `<img src="${r.photoUrl}" alt="Photo actuelle" class="form-photo-preview">
-           <p class="photo-note">Photo actuelle. Téléchargez-en une nouvelle pour la remplacer.</p>`;
-      }
 
       if (r.ingredients && r.ingredients.length > 0) {
         r.ingredients.forEach(i => addIngRowFn(i.quantite, i.unite, i.nom));
@@ -580,15 +559,6 @@
       document.querySelectorAll('.step-num').forEach((el, i) => { el.textContent = i + 1; });
     }
 
-    // Aperçu photo en temps réel dans le formulaire
-    document.getElementById('f-photo').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const url = URL.createObjectURL(file);
-      document.getElementById('photo-preview-form').innerHTML =
-        `<img src="${url}" alt="Aperçu" class="form-photo-preview">`;
-    });
-
     async function saveRecipeFn() {
       const titre = document.getElementById('f-titre').value.trim();
       if (!titre) { showToast('Le titre est obligatoire !', 'error'); return; }
@@ -624,13 +594,6 @@
         updatedAt: serverTimestamp(),
       };
 
-      // Conserver la photo existante si on modifie
-      if (state.editingId) {
-        const existing = state.recipes.find(r => r.id === state.editingId);
-        if (existing?.photoUrl)  data.photoUrl  = existing.photoUrl;
-        if (existing?.photoPath) data.photoPath = existing.photoPath;
-      }
-
       const btn = document.getElementById('btn-save');
       btn.disabled    = true;
       btn.textContent = '⏳ Enregistrement…';
@@ -644,22 +607,6 @@
           recipeId       = docRef.id;
         } else {
           await updateDoc(doc(db, "recipes", recipeId), data);
-        }
-
-        // Upload photo si sélectionnée
-        const photoFile = document.getElementById('f-photo').files[0];
-        if (photoFile) {
-          try {
-            const ext       = photoFile.name.split('.').pop().toLowerCase();
-            const photoPath = `photos/${recipeId}.${ext}`;
-            const photoRef  = ref(storage, photoPath);
-            await uploadBytes(photoRef, photoFile);
-            const photoUrl  = await getDownloadURL(photoRef);
-            await updateDoc(doc(db, "recipes", recipeId), { photoUrl, photoPath });
-          } catch (photoErr) {
-            console.warn("Upload photo échoué :", photoErr);
-            showToast("Recette enregistrée (photo non uploadée — vérifiez les règles Firebase Storage)", "warning");
-          }
         }
 
         await loadRecipes();
@@ -692,11 +639,6 @@
       state.deleteTargetId = null;
 
       try {
-        // Supprimer la photo si présente
-        const r = state.recipes.find(r => r.id === id);
-        if (r?.photoPath) {
-          try { await deleteObject(ref(storage, r.photoPath)); } catch {}
-        }
         await deleteDoc(doc(db, "recipes", id));
         await loadRecipes();
         showToast('Recette supprimée', 'success');
