@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ma Cuisine — Connexion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+
+  <div class="login-container">
+
+    <div class="login-brand">
+      <span class="login-icon">🍽️</span>
+      <h1>Ma Cuisine</h1>
+      <p>Le carnet de recettes de la famille Roussel</p>
+    </div>
+
+    <div class="login-card">
+      <h2>Connexion</h2>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="inp-email" placeholder="votre@email.fr" autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="inp-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <div id="login-error" class="error-msg hidden"></div>
+
+      <button id="btn-login" class="btn-primary">Se connecter</button>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp }            from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth,
+             signInWithEmailAndPassword,
+             onAuthStateChanged }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { FIREBASE_CONFIG }          from "./firebase-config.js";
+
+    const app  = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(app);
+
+    // Si déjà connecté → aller directement sur l'app
+    onAuthStateChanged(auth, (user) => {
+      if (user) window.location.href = "app.html";
+    });
+
+    async function doLogin() {
+      const email    = document.getElementById("inp-email").value.trim();
+      const password = document.getElementById("inp-password").value;
+      const errEl    = document.getElementById("login-error");
+      const btn      = document.getElementById("btn-login");
+
+      errEl.classList.add("hidden");
+
+      if (!email || !password) {
+        errEl.textContent = "Veuillez remplir les deux champs.";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      btn.disabled    = true;
+      btn.textContent = "Connexion…";
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        // onAuthStateChanged prendra le relais pour la redirection
+      } catch (e) {
+        errEl.textContent = "Email ou mot de passe incorrect.";
+        errEl.classList.remove("hidden");
+        btn.disabled    = false;
+        btn.textContent = "Se connecter";
+      }
+    }
+
+    document.getElementById("btn-login").addEventListener("click", doLogin);
+
+    // Valider avec la touche Entrée
+    document.getElementById("inp-password").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doLogin();
+    });
+    document.getElementById("inp-email").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("inp-password").focus();
+    });
+  </script>
+
+</body>
+</html>

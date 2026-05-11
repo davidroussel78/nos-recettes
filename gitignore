@@ -1,0 +1,10 @@
+# Ne jamais committer les clés Firebase si elles sont dans un fichier séparé
+# (firebase-config.js est inclus car les clés web Firebase sont publiques par nature
+# et protégées par les règles de sécurité Firestore/Storage — c'est le fonctionnement normal)
+
+# Divers
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
+.env
