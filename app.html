@@ -377,7 +377,6 @@
       grid.innerHTML = filtered.map(r => {
         const icon     = CAT_ICONS[r.categorie] || '🍽️';
         const catLabel = CAT_LABELS[r.categorie] || r.categorie;
-        const catClass = r.categorie ? `cat-${r.categorie}` : 'cat-default';
 
         const metas = [
           r.nbPersonnes     ? `<span>👥 ${r.nbPersonnes} pers.</span>`         : '',
@@ -388,7 +387,7 @@
 
         return `
           <div class="recipe-card" onclick="openDetail('${r.id}')">
-            <div class="card-icon-block ${catClass}">${icon}</div>
+            <div class="card-icon-block cat-${r.categorie || 'default'}">${icon}</div>
             <div class="card-body">
               <div class="card-cat">${catLabel}</div>
               <h3 class="card-title">${escHtml(r.titre)}</h3>
